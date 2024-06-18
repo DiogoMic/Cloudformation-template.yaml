@@ -1,0 +1,42 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: CloudFormation template to create an EC2 instance with Windows Server 2022 and a security group
+
+Parameters:
+  ExistingVPCId:
+    Type: String
+    Description: ID of the existing VPC where the EC2 instance will be launched
+  ExistingSubnetId:
+    Type: String
+    Description: ID of the existing subnet within the VPC where the EC2 instance will be launched
+  KeyName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: Name of an existing EC2 KeyPair to enable SSH access to the instance
+
+Resources:
+  MySecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow RDP and ICMP traffic
+      VpcId: !Ref ExistingVPCId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 3389
+          ToPort: 3389
+          CidrIp: "0.0.0.0/0" # Allow RDP from anywhere
+        - IpProtocol: icmp
+          FromPort: -1
+          ToPort: -1
+          CidrIp: "0.0.0.0/0" # Allow ICMP from anywhere
+
+  MyEC2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t2.xlarge
+      ImageId: "ami-0069eac59d05ae12b" # Microsoft Windows 2022 Datacenter edition. [English]
+      SubnetId: !Ref ExistingSubnetId
+      SecurityGroupIds:
+        - !Ref MySecurityGroup
+      KeyName: !Ref KeyName
+      Tags:
+        - Key: Name
+          Value: Windows Server 2022 (datacenter edition)
